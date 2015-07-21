@@ -1,0 +1,1 @@
+mongoose-free-5.6.exe -listening_port 5678 -access_control_list -0.0.0.0/0,+192.168/16,+10./8 -url_rewrites /factorio/=../

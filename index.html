@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html>
+    
+    <head>
+        <title></title>
+        <script type="text/javascript" src="/Scripts/jquery-2.1.4.min.js"></script>
+        <script type="text/javascript" src="/Scripts/cytoscape.min.js"></script>
+        <!--<script type="text/javascript" src="Scripts/codemirror.js"></script>
+        <link href="Content/codemirror.css" rel="stylesheet" />
+        <script type="text/javascript" src="/Scripts/lua.js"></script>-->
+        <script type="text/javascript" src="/Scripts/zip/zip.js"></script>
+        <script type="text/javascript" src="/Scripts/zip/zip-ext.js"></script>
+        <script type="text/javascript" src="/Scripts/FactorioVisual.js"></script>
+    </head>
+    
+    <body>
+        <script>
+            zip.workerScriptsPath = "/Scripts/zip/";
+        </script>
+        <div id="cy-Mods" style="height:300px"></div>
+        <div id="cy-Recipe" style="height:1000px"></div>
+        <!--<div class="row" style="display:none">
+            <div class="span7" border=1>
+                <textarea id="mytext"></textarea>
+            </div>
+            <p>
+                <a href="#" class="btn btn-primary btn-large " onclick="executeLua(myCodeMirror.getValue(), true); return false" id="the_button">execute &raquo;</a>
+            </p>
+        </div>-->
+        <div class="span5" style="display:none">
+                <h4>output</h4>
+                <pre id="output"></pre>
+            </div>
+        <script>
+            //var myCodeMirror = undefined;
+            $(function () {
+                jQuery.get('/Scripts/FactorioVisual.lua', {}, function (data) {
+                    executeLua(data, true);
+                    
+                    //document.getElementById('mytext').innerHTML = data;
+                    //// CodeMirror
+                    //myCodeMirror = CodeMirror.fromTextArea(document.getElementById('mytext'));
+                    ////myCodeMirror.setSize(screen.width*0.6, screen.height*0.2);
+                });
+            });
+            // Execution
+            var outputElement = document.getElementById('output')
+            var Module = {
+                print: function (x) {
+                    outputElement.textContent = (outputElement.textContent ? outputElement.textContent + '\n' : '') + x;
+                }
+            };
+    
+            function executeLua(code, clear) {
+                if (clear) {
+                    outputElement.style.color = null;
+                    outputElement.textContent = '';
+                }
+                var start = new Date().getTime();
+                try {
+                    L.execute(code);
+                } catch (e) {
+                    outputElement.style.color = "red";
+                    outputElement.textContent = e.toString();
+                }
+                var end = new Date().getTime();
+                var time = end - start;
+                //Module.print('Execution time: ' + time);
+            }
+        </script>
+        <script src="/Scripts/lua.vm.js"></script>
+    </body>
+
+</html>
