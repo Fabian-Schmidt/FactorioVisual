@@ -329,7 +329,7 @@ module FactorioVisualAngular {
             ret = ret.add(cyOfRecipe.nodes('#' + productName));
             ret = ret.add(cyOfRecipe.nodes('#' + productName).incomers());
             ret = ret.add(cyOfRecipe.nodes('#' + productName).outgoers());
-            
+
             return ret;
         }
         factorioGraph.ingredients = function (productName: string): IIngredient[] {
@@ -389,8 +389,7 @@ module FactorioVisualAngular {
                 if (product.selected == undefined) {
                     product.selected = true;
                 } else {
-                    //product.selected = !product.selected;
-                    product.selected = true;
+                    product.selected = !product.selected;
                 }
             });
         }
@@ -467,7 +466,7 @@ module FactorioVisualAngular {
                                 'background-image': 'data(icon)'
                             }
                         }, {
-                            selector: 'node[selected]',
+                            selector: 'node[displayCount > 0]',
                             css: {
                                 'background-color': '#B5844E'
                             }
@@ -481,11 +480,47 @@ module FactorioVisualAngular {
                     }
                 });
             });
-            
-            $rootScope.$on('factorio.selectProduct', function (event: ng.IAngularEvent, product: IProduct) {
-                var productParents = factorioGraph.productsRelatedCollection(product.name);
-                that.cy.add(productParents);
 
+            $rootScope.$on('factorio.selectProduct', function (event: ng.IAngularEvent, product: IProduct) {
+                var productName = product.name;
+                var displayCount = that.cy.nodes('#' + productName).data('displayCount');
+                if (displayCount == undefined || isNaN(displayCount)) {
+                    displayCount = 0;
+                }
+                if (displayCount == 0) {
+                    //Add this to graph
+                    var productParents = factorioGraph.productsRelatedCollection(product.name);
+                    productParents.forEach((ele) => {
+                        var usageCount = ele.data('usageCount');
+                        if (usageCount == undefined || isNaN(usageCount)) {
+                            usageCount = 0;
+                        } usageCount++;
+                        ele.data('usageCount', usageCount);
+                    });
+                    that.cy.add(productParents);
+                    that.cy.nodes('#' + productName).data('displayCount', ++displayCount);
+                } else {
+                    //Remove this from graph
+                    var removeOneUsageFunc = (ele) => {
+                        var usageCount = ele.data('usageCount');
+                        if (usageCount == undefined || isNaN(usageCount)) {
+                            usageCount = 0;
+                        } usageCount--;
+                        ele.data('usageCount', usageCount);
+                    };
+                    
+                    that.cy.nodes('#' + productName).data('displayCount', --displayCount);
+                    that.cy.nodes('#' + productName).forEach(removeOneUsageFunc);
+                    that.cy.nodes('#' + productName).incomers().nodes().forEach(removeOneUsageFunc);
+                    that.cy.nodes('#' + productName).outgoers().nodes().forEach(removeOneUsageFunc);
+
+                    //TODO: this leave unused edges in the cy object.
+                    that.cy.remove(that.cy.nodes('#' + productName).incomers('[^displayCount], [displayCount = 0]').nodes('[usageCount = 0]'));
+                    that.cy.remove(that.cy.nodes('#' + productName).outgoers('[^displayCount], [displayCount = 0]').nodes('[usageCount = 0]'));
+
+                    that.cy.remove(that.cy.nodes('#' + productName + '[usageCount = 0]'));
+                }
+                //Trigger a layout update
                 (<any>that.cy).layout();
             });
         }
