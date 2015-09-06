@@ -19,71 +19,147 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap-theme.css" />
-    <Content Include="Content\bootstrap-theme.min.css" />
+    <Content Include="Content\bootstrap-theme.min.css">
+      <DependentUpon>bootstrap-theme.css</DependentUpon>
+    </Content>
     <Content Include="Content\bootstrap.css" />
-    <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\bootstrap.min.css">
+      <DependentUpon>bootstrap.css</DependentUpon>
+    </Content>
     <Content Include="Content\codemirror.css" />
+    <Content Include="Content\toastr.css" />
+    <Content Include="Content\toastr.min.css">
+      <DependentUpon>toastr.css</DependentUpon>
+    </Content>
     <Content Include="Content\ui-bootstrap-csp.css" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="index.html" />
     <Content Include="mongoose-free-5.6.exe" />
     <Content Include="Scripts\angular-animate.js" />
-    <Content Include="Scripts\angular-animate.min.js" />
+    <Content Include="Scripts\angular-animate.min.js">
+      <DependentUpon>angular-animate.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\angular-aria.js" />
-    <Content Include="Scripts\angular-aria.min.js" />
+    <Content Include="Scripts\angular-aria.min.js">
+      <DependentUpon>angular-aria.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\angular-cookies.js" />
-    <Content Include="Scripts\angular-cookies.min.js" />
+    <Content Include="Scripts\angular-cookies.min.js">
+      <DependentUpon>angular-cookies.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\angular-csp.css" />
+    <Content Include="Scripts\angular-filter.js" />
+    <Content Include="Scripts\angular-filter.min.js" />
     <Content Include="Scripts\angular-loader.js" />
-    <Content Include="Scripts\angular-loader.min.js" />
+    <Content Include="Scripts\angular-loader.min.js">
+      <DependentUpon>angular-loader.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\angular-message-format.js" />
-    <Content Include="Scripts\angular-message-format.min.js" />
+    <Content Include="Scripts\angular-message-format.min.js">
+      <DependentUpon>angular-message-format.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\angular-messages.js" />
-    <Content Include="Scripts\angular-messages.min.js" />
+    <Content Include="Scripts\angular-messages.min.js">
+      <DependentUpon>angular-messages.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\angular-mocks.js" />
     <Content Include="Scripts\angular-resource.js" />
-    <Content Include="Scripts\angular-resource.min.js" />
+    <Content Include="Scripts\angular-resource.min.js">
+      <DependentUpon>angular-resource.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\angular-route.js" />
-    <Content Include="Scripts\angular-route.min.js" />
+    <Content Include="Scripts\angular-route.min.js">
+      <DependentUpon>angular-route.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\angular-sanitize.js" />
-    <Content Include="Scripts\angular-sanitize.min.js" />
+    <Content Include="Scripts\angular-sanitize.min.js">
+      <DependentUpon>angular-sanitize.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\angular-scenario.js" />
     <Content Include="Scripts\angular-touch.js" />
-    <Content Include="Scripts\angular-touch.min.js" />
+    <Content Include="Scripts\angular-touch.min.js">
+      <DependentUpon>angular-touch.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\angular-ui\ui-bootstrap-tpls.js" />
     <Content Include="Scripts\angular-ui\ui-bootstrap-tpls.min.js" />
     <Content Include="Scripts\angular-ui\ui-bootstrap.js" />
     <Content Include="Scripts\angular-ui\ui-bootstrap.min.js" />
     <Content Include="Scripts\angular.js" />
-    <Content Include="Scripts\angular.min.js" />
+    <Content Include="Scripts\angular.min.js">
+      <DependentUpon>angular.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\codemirror.js" />
     <Content Include="Scripts\cytoscape.js" />
-    <Content Include="Scripts\cytoscape.min.js" />
-    <Content Include="Scripts\FactorioVisual.js" />
+    <Content Include="Scripts\cytoscape.min.js">
+      <DependentUpon>cytoscape.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\FactorioVisual-Angular.js">
+      <DependentUpon>FactorioVisual-Angular.ts</DependentUpon>
+    </Content>
+    <Content Include="Scripts\FactorioVisual.js">
+      <DependentUpon>FactorioVisual.ts</DependentUpon>
+    </Content>
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />
-    <Content Include="Content\bootstrap-theme.css.map" />
-    <Content Include="Content\bootstrap.css.map" />
+    <Content Include="Content\bootstrap-theme.css.map">
+      <DependentUpon>bootstrap-theme.css</DependentUpon>
+    </Content>
+    <Content Include="Content\bootstrap.css.map">
+      <DependentUpon>bootstrap.css</DependentUpon>
+    </Content>
     <Content Include=".settings\settings.json" />
     <Content Include=".settings\tasks.json" />
     <Content Include="packages.config" />
     <Content Include="Scripts\errors.json" />
-    <Content Include="Scripts\angular-touch.min.js.map" />
-    <Content Include="Scripts\angular-sanitize.min.js.map" />
-    <Content Include="Scripts\angular-route.min.js.map" />
-    <Content Include="Scripts\angular-resource.min.js.map" />
-    <Content Include="Scripts\angular-messages.min.js.map" />
-    <Content Include="Scripts\angular-message-format.min.js.map" />
-    <Content Include="Scripts\angular-loader.min.js.map" />
-    <Content Include="Scripts\angular-cookies.min.js.map" />
-    <Content Include="Scripts\angular-aria.min.js.map" />
-    <Content Include="Scripts\angular-animate.min.js.map" />
-    <Content Include="Scripts\angular.min.js.map" />
-    <None Include="Scripts\jquery-2.1.4.intellisense.js" />
+    <Content Include="Scripts\angular-touch.min.js.map">
+      <DependentUpon>angular-touch.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\angular-sanitize.min.js.map">
+      <DependentUpon>angular-sanitize.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\angular-route.min.js.map">
+      <DependentUpon>angular-route.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\angular-resource.min.js.map">
+      <DependentUpon>angular-resource.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\angular-messages.min.js.map">
+      <DependentUpon>angular-messages.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\angular-message-format.min.js.map">
+      <DependentUpon>angular-message-format.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\angular-loader.min.js.map">
+      <DependentUpon>angular-loader.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\angular-cookies.min.js.map">
+      <DependentUpon>angular-cookies.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\angular-aria.min.js.map">
+      <DependentUpon>angular-aria.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\angular-animate.min.js.map">
+      <DependentUpon>angular-animate.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\angular.min.js.map">
+      <DependentUpon>angular.js</DependentUpon>
+    </Content>
+    <Content Include="Content\toastr.scss">
+      <DependentUpon>toastr.css</DependentUpon>
+    </Content>
+    <Content Include="Content\toastr.less">
+      <DependentUpon>toastr.css</DependentUpon>
+    </Content>
+    <Content Include="Scripts\FactorioVisual-Angular.js.map">
+      <DependentUpon>FactorioVisual-Angular.ts</DependentUpon>
+    </Content>
+    <None Include="Scripts\jquery-2.1.4.intellisense.js">
+      <DependentUpon>jquery-2.1.4.js</DependentUpon>
+    </None>
     <Content Include="Scripts\i18n\angular-locale_aa-dj.js" />
     <Content Include="Scripts\i18n\angular-locale_aa-er.js" />
     <Content Include="Scripts\i18n\angular-locale_aa-et.js" />
@@ -828,10 +904,16 @@
     <Content Include="Scripts\i18n\angular-locale_zu-za.js" />
     <Content Include="Scripts\i18n\angular-locale_zu.js" />
     <Content Include="Scripts\jquery-2.1.4.js" />
-    <Content Include="Scripts\jquery-2.1.4.min.js" />
+    <Content Include="Scripts\jquery-2.1.4.min.js">
+      <DependentUpon>jquery-2.1.4.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\lua.js" />
     <Content Include="Scripts\lua.vm.js" />
     <Content Include="Scripts\npm.js" />
+    <Content Include="Scripts\toastr.js" />
+    <Content Include="Scripts\toastr.min.js">
+      <DependentUpon>toastr.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\zip\deflate.js" />
     <Content Include="Scripts\zip\inflate.js" />
     <Content Include="Scripts\zip\mime-types.js" />
@@ -891,15 +973,20 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Scripts\dkjson.lua" />
-    <Content Include="Scripts\FactorioVisual.js.map" />
+    <Content Include="Scripts\FactorioVisual.js.map">
+      <DependentUpon>FactorioVisual.ts</DependentUpon>
+    </Content>
     <Content Include="Scripts\FactorioVisual.lua" />
-    <Content Include="Scripts\jquery-2.1.4.min.map" />
+    <Content Include="Scripts\jquery-2.1.4.min.map">
+      <DependentUpon>jquery-2.1.4.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\zip\.jshintrc" />
     <Content Include="Scripts\zip\tests\lorem.zip" />
     <Content Include="Scripts\zip\tests\lorem2.zip" />
     <Content Include="Scripts\zip\tests\lorem_store.zip" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Scripts\FactorioVisual-Angular.ts" />
     <TypeScriptCompile Include="Scripts\FactorioVisual.ts" />
     <TypeScriptCompile Include="Scripts\typings\angularjs\angular-animate.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\angularjs\angular-cookies.d.ts" />
@@ -910,6 +997,7 @@
     <TypeScriptCompile Include="Scripts\typings\angularjs\angular.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\cytoscape.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
+    <TypeScriptCompile Include="Scripts\typings\toastr\toastr.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\zip.js.d.ts" />
   </ItemGroup>
   <PropertyGroup>

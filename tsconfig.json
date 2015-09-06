@@ -2,6 +2,6 @@
 	"compilerOptions": {
 		"target": "ES5",
 		"sourceMap": true,
-		"removeComments": true
+        "removeComments": true
 	}
 }

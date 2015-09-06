@@ -105,8 +105,6 @@ autoplace_utils = require("autoplace_utils")
 local modListPromise = js.global.factorio.loadModList()
 
 local modListLoaded = function(object, modListTxt)
-  --print('modListLoaded!')
-  --print (modListTxt);
   local json = require ("dkjson")
   local modList = json.decode(modListTxt)
   
@@ -184,50 +182,15 @@ local modListLoaded = function(object, modListTxt)
 	return buflen
   end
   
-  ----minize data transfer
-  --data.raw.tile = {}
-  --data.raw.player = {}
-  --data.raw.decorative = {}
-  --data.raw.particle = {}
-  
   js.global:eval('factorio.data = {};');
   local buffer = {}
   local bufferlen = transferToJs('factorio.data',  data.raw, buffer, 0);
   local concat = table.concat
   js.global:eval(concat (buffer))
-  
-  --local str = json.encode (data.raw, { indent = false })
-  --
-  --local factorio = js.global.factorio;
-  --factorio.json = str
-  ----notify Java Script
+ 
+
   js.global.factorio.jsonUpdated()
   print('lua done!')
 end
 --modListPromise.done(function() print('First callback does not work.') end,function() print('seconds callback does work.') end)
 modListPromise.done(modListLoaded, modListLoaded);
-
---print (str)
-
---print('hello' .. ' ' .. 'world!') -- This is Lua!
---require("prototypes.entity.demo-entities")
---print(js.global:eval('[0,1,2,3,4,5][3]')) -- Run JS from Lua
---
----- Interact with the page using Lua
---
---local screen = js.global.screen
---print("you haz " .. (screen.width*screen.height) .. " pixels")
---
---local window = js.global -- global object in JS is the window
---window:alert("hello from lua!")
---window:setTimeout(function() print('hello from lua callback') end, 2500)
---
---local document = js.global.document
---print("this window has title '" .. document.title .. "'")
---
----- call constructors (global, or as properties of other objects)
---print("i made an ArrayBuffer of size " .. js.new(js.global.ArrayBuffer, 20).byteLength)
----- print("i made an ArrayBuffer of size " .. js.global.ArrayBuffer:new(20).byteLength)
---
---print("time iz " .. js.global.Date.now()) -- call with no arguments
-

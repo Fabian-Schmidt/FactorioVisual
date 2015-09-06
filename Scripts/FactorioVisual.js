@@ -1,240 +1,191 @@
 /// <reference path="typings/jquery/jquery.d.ts" />
 /// <reference path="typings/cytoscape.d.ts" />
 /// <reference path="typings/zip.js.d.ts" />
+/// <reference path="typings/toastr/toastr.d.ts" />
+/// <reference path="factoriovisual-angular.ts" />
 var FactorioVisual = (function () {
     function FactorioVisual() {
         this.factorioFolder = '/factorio/';
-        this.json = '';
+        this.factorioModFolder = this.factorioFolder + 'mods/';
         this.data = {};
         this.ZipContainer = {};
+        this.dataLoadedPromise = jQuery.Deferred();
     }
+    //cyOfMods: Cy.Instance;
     FactorioVisual.prototype.loadModList = function () {
         var that = factorio;
-        that.ZipContainer = {};
-        var modFolder = that.factorioFolder + 'mods/';
-        var promise = jQuery.Deferred();
+        var loadModListPromise = jQuery.Deferred();
+        toastr.options.timeOut = 0;
+        toastr.info("loading game modules");
+        loadModListPromise.then(function () {
+            toastr.clear();
+            toastr.options.timeOut = 30;
+            toastr.success("loading game modules");
+        });
+        loadModListPromise.fail(function () {
+            toastr.clear();
+            toastr.options.timeOut = 30;
+            toastr.error("loading game modules");
+        });
         var modListConfigPromise = $.ajax({
             type: 'GET',
-            url: modFolder + 'mod-list.json',
+            url: that.factorioModFolder + 'mod-list.json',
             dataType: 'json',
-            success: function (modListConfig) { },
             data: {},
             async: true
         });
         var availableModList = $.ajax({
             type: 'GET',
-            url: modFolder,
-            success: function () {
-                var availableModListDom = jQuery(availableModList.responseText);
-                var links = availableModListDom.find('a'); //jquery get all hyperlinks
-                modListConfigPromise.then(function (modListConfig) {
-                    var modListPromises = [];
-                    $(links).each(function (i, link) {
-                        var linkHref = $(link).attr('href');
-                        if (linkHref.length > 5 && linkHref.indexOf('DisableMods') == -1) {
-                            var thisModPromise = undefined;
-                            var thisModFolder = linkHref.replace(modFolder, '').replace('/', '');
-                            if (linkHref.slice(-1) == '/') {
-                                thisModPromise = $.ajax({
-                                    type: 'GET',
-                                    url: modFolder + thisModFolder + '/info.json',
-                                    dataType: 'json',
-                                    success: function (thisModConfigJson) {
-                                        //var thisModConfigJson = thisModConfig.responseJSON;
-                                        $(modListConfig.mods).each(function (i, mod) {
-                                            if (mod['name'] == thisModConfigJson.name) {
-                                                mod['Folder'] = thisModFolder;
-                                                mod['Dependencies'] = thisModConfigJson.dependencies;
-                                                mod['Info'] = thisModConfigJson;
-                                                //break each
-                                                return false;
-                                            }
-                                        });
-                                    },
-                                    data: {},
-                                    async: true
+            url: that.factorioModFolder,
+            data: {},
+            async: true
+        });
+        jQuery.when.apply(jQuery, [modListConfigPromise, availableModList]).then(function () {
+            var modListConfig = modListConfigPromise.responseJSON;
+            var availableModListDom = jQuery(availableModList.responseText);
+            var links = availableModListDom.find('a'); //jquery get all hyperlinks
+            var modListPromises = [];
+            $(links).each(function (i, link) {
+                var linkHref = $(link).attr('href');
+                if (linkHref.length > 5 && linkHref.indexOf('DisableMods') == -1 && (
+                //if absolut link then beneth the modfolder
+                linkHref[0] != '/' || linkHref.indexOf(that.factorioModFolder) >= 0)) {
+                    var thisModPromise = undefined;
+                    var thisModFolder = linkHref.replace(that.factorioModFolder, '').replace('/', '');
+                    if (linkHref.slice(-1) == '/') {
+                        var thisModDeferred = jQuery.Deferred();
+                        thisModPromise = thisModDeferred.promise();
+                        $.ajax({
+                            type: 'GET',
+                            url: that.factorioModFolder + thisModFolder + '/info.json',
+                            dataType: 'json',
+                            success: function (thisModConfigJson) {
+                                //var thisModConfigJson = thisModConfig.responseJSON;
+                                $(modListConfig.mods).each(function (i, mod) {
+                                    if (mod['name'] == thisModConfigJson.name) {
+                                        mod['Folder'] = thisModFolder;
+                                        mod['Dependencies'] = thisModConfigJson.dependencies;
+                                        mod['Info'] = thisModConfigJson;
+                                        thisModDeferred.resolve();
+                                        //break each
+                                        return false;
+                                    }
                                 });
-                            }
-                            else if (linkHref.slice(-4) == '.zip') {
-                                thisModPromise = jQuery.Deferred();
-                                zip.createReader(new zip.HttpReader(modFolder + thisModFolder), function (zipReader) {
-                                    zipReader.getEntries(function (entries) {
-                                        that.ZipContainer[thisModFolder] = { entries: [], files: {} };
-                                        that.ZipContainer[thisModFolder].entries = entries;
-                                        var infoJson = undefined;
-                                        entries.forEach(function (entry) {
-                                            //console.log(entry.filename);
-                                            if (!entry.directory && entry.filename.indexOf('info.json') >= 0) {
-                                                infoJson = entry;
-                                                //break forEach
-                                                return false;
-                                            }
-                                        });
-                                        var thisModSubPromises = [];
-                                        that.ZipContainer[thisModFolder].files = {};
-                                        entries.forEach(function (entry) {
-                                            if (!entry.directory && (entry.filename.indexOf('.lua') >= 0 || entry.filename.indexOf('.png') >= 0)) {
-                                                var thisModSubPromise = jQuery.Deferred();
-                                                thisModSubPromises.push(thisModSubPromise);
-                                                entry.getData(new zip.TextWriter(), function (text) {
-                                                    that.ZipContainer[thisModFolder].files[entry.filename] = text;
-                                                    thisModSubPromise.resolve();
-                                                });
-                                            }
-                                        });
-                                        infoJson.getData(new zip.TextWriter(), function (text) {
+                            },
+                            data: {},
+                            async: true
+                        });
+                    }
+                    else if (linkHref.slice(-4) == '.zip') {
+                        var thisModDeferred = jQuery.Deferred();
+                        thisModPromise = thisModDeferred.promise();
+                        zip.createReader(new zip.HttpReader(that.factorioModFolder + thisModFolder), function (zipReader) {
+                            zipReader.getEntries(function (entries) {
+                                that.ZipContainer[thisModFolder] = { entries: [], files: {} };
+                                that.ZipContainer[thisModFolder].entries = entries;
+                                var thisModSubPromises = [];
+                                entries.forEach(function (entry) {
+                                    if (entry.filename.indexOf('info.json') >= 0) {
+                                        var thisModSubDeferred = jQuery.Deferred();
+                                        thisModSubPromises.push(thisModSubDeferred.promise());
+                                        entry.getData(new zip.TextWriter(), function (text) {
                                             // text contains the entry data as a String
-                                            //console.log(text);
                                             var thisModConfigJson = JSON.parse(text);
                                             $(modListConfig.mods).each(function (i, mod) {
                                                 if (mod['name'] == thisModConfigJson.name) {
                                                     mod['Folder'] = thisModFolder;
                                                     mod['Dependencies'] = thisModConfigJson.dependencies;
                                                     mod['Info'] = thisModConfigJson;
+                                                    thisModSubDeferred.resolve();
                                                     //break each
                                                     return false;
                                                 }
                                             });
-                                            jQuery.when.apply(jQuery, thisModSubPromises).then(function () {
-                                                thisModPromise.resolve();
-                                            });
                                         });
-                                    });
+                                    }
+                                    else if (entry.filename.indexOf('.lua') >= 0 || entry.filename.indexOf('.png') >= 0) {
+                                        var thisModSubDeferred = jQuery.Deferred();
+                                        thisModSubPromises.push(thisModSubDeferred.promise());
+                                        entry.getData(new zip.TextWriter(), function (text) {
+                                            that.ZipContainer[thisModFolder].files[entry.filename] = text;
+                                            thisModSubDeferred.resolve();
+                                        });
+                                    }
                                 });
-                            }
-                            modListPromises.push(thisModPromise);
+                                jQuery.when.apply(jQuery, thisModSubPromises).then(function () {
+                                    thisModDeferred.resolve();
+                                });
+                            });
+                        });
+                    }
+                    if (thisModPromise != undefined) {
+                        modListPromises.push(thisModPromise);
+                    }
+                }
+            });
+            jQuery.when.apply(jQuery, modListPromises).then(function () {
+                var nodes = [];
+                var edges = [];
+                //nodes.push({
+                //    classes: 'mods',
+                //    data: {
+                //        id: 'mods',
+                //        name: 'Game modules'
+                //    }
+                //});
+                $(modListConfig.mods).each(function (i, mod) {
+                    nodes.push({
+                        classes: 'mod',
+                        data: {
+                            id: mod['name'],
+                            name: mod['name'],
+                            //parent: 'mods',
+                            index: i
                         }
                     });
-                    jQuery.when.apply(jQuery, modListPromises).then(function () {
-                        var nodes = [];
-                        var edges = [];
-                        nodes.push({
-                            classes: 'mods',
-                            data: {
-                                id: 'mods',
-                                name: 'Game modules'
+                    if (mod['Dependencies']) {
+                        mod['Dependencies'].forEach(function (dependency) {
+                            var splitted = dependency.split(' ', 3);
+                            var dependend_modname = splitted[0];
+                            var dependend_optinal = false;
+                            if (splitted[0] == '?') {
+                                dependend_modname = splitted[1];
+                                dependend_optinal = true;
                             }
-                        });
-                        $(modListConfig.mods).each(function (i, mod) {
-                            nodes.push({
-                                classes: 'mod',
-                                data: {
-                                    id: mod['name'],
-                                    name: mod['name'],
-                                    parent: 'mods',
-                                    index: i
-                                }
+                            edges.push({
+                                class: 'mod',
+                                data: { source: dependend_modname, target: mod['name'], optinal: dependend_optinal }
                             });
-                            if (mod['Dependencies']) {
-                                mod['Dependencies'].forEach(function (dependency) {
-                                    var splitted = dependency.split(' ', 3);
-                                    var dependend_modname = splitted[0];
-                                    var dependend_optinal = false;
-                                    if (splitted[0] == '?') {
-                                        dependend_modname = splitted[1];
-                                        dependend_optinal = true;
-                                    }
-                                    edges.push({
-                                        class: 'mod',
-                                        data: { source: dependend_modname, target: mod['name'], optinal: dependend_optinal }
-                                    });
-                                });
-                            }
                         });
-                        that.cyOfMods = cytoscape({
-                            container: document.getElementById('cy-Mods'),
-                            elements: {
-                                nodes: nodes,
-                                edges: edges
-                            },
-                            ready: function () {
-                                var newModListConfig = { mods: [] };
-                                var loadedMods = that.cyOfMods.collection();
-                                var iteratethoughNodes = function (node) {
-                                    var modName = node.id();
-                                    var neededMods = node.connectedEdges().sources().not(node).not(loadedMods);
-                                    neededMods.forEach(iteratethoughNodes);
-                                    if (!node.anySame(loadedMods)) {
-                                        newModListConfig.mods.push(modListConfig.mods[node.data('index')]);
-                                        loadedMods = loadedMods.add(node);
-                                    }
-                                    node.connectedEdges().targets().not(loadedMods).forEach(iteratethoughNodes);
-                                };
-                                that.cyOfMods.nodes('.mod').roots().forEach(iteratethoughNodes);
-                                that.loadedMods = newModListConfig;
-                                promise.resolve(JSON.stringify(newModListConfig));
-                            },
-                            style: [
-                                {
-                                    selector: 'node',
-                                    css: {
-                                        'content': 'data(name)'
-                                    }
-                                },
-                                {
-                                    selector: '$node > node',
-                                    css: {
-                                        'padding-top': '10px',
-                                        'padding-left': '10px',
-                                        'padding-bottom': '10px',
-                                        'padding-right': '10px',
-                                        'text-valign': 'top',
-                                        'text-halign': 'center'
-                                    }
-                                },
-                                {
-                                    selector: 'edge',
-                                    css: {
-                                        'target-arrow-shape': 'triangle'
-                                    }
-                                },
-                                {
-                                    selector: ':selected',
-                                    css: {
-                                        'background-color': 'black',
-                                        'line-color': 'black',
-                                        'target-arrow-color': 'black',
-                                        'source-arrow-color': 'black'
-                                    }
-                                }
-                            ],
-                            //layout: {
-                            //    name: 'cose',
-                            //    padding: 25
-                            //}
-                            //layout: {
-                            //    name: 'concentric',
-                            //    concentric: function (node) { // returns numeric value for each node, placing higher nodes in levels towards the centre
-                            //        return node.degree();
-                            //    },
-                            //    levelWidth: function (nodes) { // the variation of concentric values in each level
-                            //        return nodes.maxDegree() / 4;
-                            //    }
-                            //}
-                            layout: {
-                                name: 'breadthfirst',
-                                fit: true,
-                                directed: false,
-                                padding: 30,
-                                circle: false,
-                                spacingFactor: 1.75,
-                                boundingBox: undefined,
-                                avoidOverlap: true,
-                                roots: undefined,
-                                maximalAdjustments: 0,
-                                animate: false,
-                                animationDuration: 500,
-                                ready: undefined,
-                                stop: undefined // callback on layoutstop
-                            }
-                        });
-                    });
+                    }
                 });
-            },
-            data: {},
-            async: true
+                var cyOfMods = cytoscape({
+                    headless: true,
+                    elements: {
+                        nodes: nodes,
+                        edges: edges
+                    },
+                    ready: function () {
+                        var sortedByDependencyModListConfig = { mods: [] };
+                        var loadedMods = cyOfMods.collection();
+                        var iteratethoughNodes = function (node) {
+                            var modName = node.id();
+                            var neededMods = node.connectedEdges().sources().not(node).not(loadedMods);
+                            neededMods.forEach(iteratethoughNodes);
+                            if (!node.anySame(loadedMods)) {
+                                sortedByDependencyModListConfig.mods.push(modListConfig.mods[node.data('index')]);
+                                loadedMods = loadedMods.add(node);
+                            }
+                            node.connectedEdges().targets().not(loadedMods).forEach(iteratethoughNodes);
+                        };
+                        cyOfMods.nodes().roots().forEach(iteratethoughNodes);
+                        that.loadedMods = sortedByDependencyModListConfig;
+                        loadModListPromise.resolve(JSON.stringify(sortedByDependencyModListConfig));
+                    }
+                });
+            });
         });
-        return promise.promise();
+        return loadModListPromise.promise();
     };
     FactorioVisual.prototype.loadFileFromZip = function (zipPackage, filename) {
         var that = factorio;
@@ -257,25 +208,25 @@ var FactorioVisual = (function () {
         return luaFileContent;
     };
     FactorioVisual.prototype.jsonUpdated = function () {
-        //this.data = jQuery.parseJSON(this.factorio.json);
-        //alert('data loaded');
-        window.setTimeout(factorio.createRecipeGraph, 10);
+        var that = factorio;
+        //window.setTimeout(factorio.createRecipeGraph, 10);
+        that.dataLoadedPromise.resolveWith(that.data);
     };
     FactorioVisual.prototype.iconConfigToURI = function (icon) {
         icon = icon.replace('__base__', factorio.factorioFolder + 'data/base');
+        icon = icon.replace('__core__', factorio.factorioFolder + 'data/core');
         if (icon.indexOf('__') == -1) {
             return icon;
         }
         for (var key in factorio.loadedMods.mods) {
             var mod = factorio.loadedMods.mods[key];
-            if (mod.name != 'base' && icon.indexOf('__' + mod.name + '__') == 0) {
+            var modIconReplacePattern = '__' + mod.name + '__';
+            if (mod.name != 'base' && icon.indexOf(modIconReplacePattern) == 0) {
                 if (mod.Folder.indexOf('.zip') > 0) {
-                    icon = icon.replace('__' + mod.name + '__', '');
-                    var data = Base64.encode(factorio.loadFileFromZip(mod.Folder, icon));
-                    icon = 'data:image/png;base64,' + data;
+                    icon = factorio.factorioFolder + 'data/base/graphics/terrain/blank.png';
                 }
                 else {
-                    icon = icon.replace('__' + mod.name + '__', factorio.factorioFolder + 'mods/' + mod.Folder);
+                    icon = icon.replace(modIconReplacePattern, factorio.factorioModFolder + mod.Folder);
                 }
             }
             if (icon.indexOf('__') == -1) {
@@ -357,17 +308,16 @@ var FactorioVisual = (function () {
         }
         //Find icon for Products
         for (var key in that.data) {
-            if (key != 'recipe') {
-                var dataGroup = that.data[key];
-                for (var key in dataGroup) {
-                    var dataElement = dataGroup[key];
-                    if (dataElement.icon != undefined) {
-                        var products = productToNode[dataElement.name];
-                        if (products != undefined) {
-                            for (var key in products) {
-                                var product = products[key];
-                                product.data['icon'] = that.iconConfigToURI(dataElement.icon);
-                            }
+            //if (key != 'recipe') {
+            var dataGroup = that.data[key];
+            for (var key in dataGroup) {
+                var dataElement = dataGroup[key];
+                if (dataElement.icon != undefined) {
+                    var products = productToNode[dataElement.name];
+                    if (products != undefined) {
+                        for (var key in products) {
+                            var product = products[key];
+                            product.data['icon'] = that.iconConfigToURI(dataElement.icon);
                         }
                     }
                 }
@@ -528,4 +478,4 @@ var Base64 = {
         return string;
     }
 };
-//# sourceMappingURL=FactorioVisual.js.map
+//# sourceMappingURL=factoriovisual.js.map

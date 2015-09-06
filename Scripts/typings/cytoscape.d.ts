@@ -78,7 +78,7 @@ declare module Cy {
         CollectionNodesMetadata, CollectionNodesPosition, CollectionNodesTraversing, CollectionNodesCompound { }
 
     interface Collection extends CollectionFirst,
-        CollectionManipulation, CollectionEvents, CollectionData, CollectionPosition, CollectionLayout, CollectionSelection, CollectionStyle, CollectionAnimation, CollectionComparision, CollectionIteration, CollectionBuildingUnion, CollectionAlgorithms { }
+        CollectionManipulation, CollectionEvents, CollectionData, CollectionPosition, CollectionLayout, CollectionSelection, CollectionStyle, CollectionAnimation, CollectionComparision, CollectionTraversing, CollectionIteration, CollectionBuildingUnion, CollectionAlgorithms { }
 
     interface CollectionFirstElement extends CollectionFirstEdge, CollectionFirstNode {
         //Intentionally empty.
@@ -872,6 +872,7 @@ declare module Cy {
          * ele - The element being considered.
          */
         filter(filter: (i: number, ele: CollectionElements) => boolean): CollectionElements;
+        nodes(): CollectionNodes;
         /**
          * Get the nodes that match the specified selector.
          * 
