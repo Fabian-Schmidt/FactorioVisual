@@ -356,4 +356,4 @@ var FactorioVisualAngular;
     })();
     FactorioVisualAngular.graphController = graphController;
 })(FactorioVisualAngular || (FactorioVisualAngular = {}));
-//# sourceMappingURL=FactorioVisual-Angular.js.map
+//# sourceMappingURL=factoriovisual-angular.js.map
