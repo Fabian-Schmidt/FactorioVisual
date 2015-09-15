@@ -79,9 +79,9 @@
             <br /><br />
             <table class="SelectionProduct">
                 <tbody>
-                    <tr ng-repeat="(subgroup, subProducts) in products | groupBy: 'subgroup'">
+                    <tr ng-repeat="(subgroup, subProducts) in products | groupBy: 'subgroup_order' | toArray: true | orderBy: '$key'">
                         <td ng-repeat="product in subProducts | orderBy: 'order'" ng-class="{selected: product.selected}">
-                            <a ng-click="onProductSelect(product)" href="" data-toggle="tooltip" title="{{product.name}}">
+                              <a ng-click="onProductSelect(product)" href="" data-toggle="tooltip" title="{{product.name}}">
                                 <img src="{{product.icon}}" alt="{{product.name}}" title="{{product.name}}" />
                             </a>
                         </td>

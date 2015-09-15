@@ -96,6 +96,7 @@ var FactorioVisualAngular;
                         order: undefined
                     }
                 };
+                //TODO:recipe.result or recipe.results
                 nodes.push(node);
                 if (productToNode[recipe.result] == undefined)
                     productToNode[recipe.result] = [];
@@ -174,6 +175,16 @@ var FactorioVisualAngular;
                     }
                 }
             }
+            //Find subgroup_order for Products
+            for (var key in productToNode) {
+                var products = productToNode[key];
+                for (var key in products) {
+                    var product = products[key];
+                    if (product.data['subgroup_order'] == undefined && product.data['subgroup'] != undefined) {
+                        product.data['subgroup_order'] = itemSubGroups[product.data['subgroup']].order;
+                    }
+                }
+            }
             cyOfRecipe = cytoscape({
                 elements: {
                     nodes: nodes,
@@ -244,6 +255,7 @@ var FactorioVisualAngular;
                 factorioGraph = data;
                 $scope.loaded = true;
                 $scope.itemGroups = factorioGraph.itemGroups;
+                $scope.itemSubGroups = factorioGraph.itemSubGroups;
             });
             $scope.onItemGroupSelect = function (itemGroup) {
                 $scope.selectedItemGroup = itemGroup;
@@ -294,7 +306,7 @@ var FactorioVisualAngular;
                         avoidOverlap: true,
                         roots: undefined,
                         maximalAdjustments: 0,
-                        animate: false,
+                        animate: true,
                         animationDuration: 500,
                         ready: undefined,
                         stop: undefined // callback on layoutstop
@@ -307,14 +319,17 @@ var FactorioVisualAngular;
                             selector: 'edge',
                             css: {
                                 'width': 6,
-                                'curve-style': 'bezier'
+                                'curve-style': 'bezier',
+                                'mid-target-arrow-shape': 'triangle',
+                                'mid-target-arrow-fill': 'filled',
+                                'mid-target-arrow-color': '#000'
                             }
                         },
                         {
                             selector: 'node',
                             css: {
-                                'height': 100,
-                                'width': 100,
+                                'height': 50,
+                                'width': 50,
                                 'background-fit': 'cover',
                                 'border-color': '#000',
                                 'border-width': 3,
@@ -392,4 +407,4 @@ var FactorioVisualAngular;
     })();
     FactorioVisualAngular.graphController = graphController;
 })(FactorioVisualAngular || (FactorioVisualAngular = {}));
-//# sourceMappingURL=factoriovisual-angular.js.map
+//# sourceMappingURL=FactorioVisual-Angular.js.map

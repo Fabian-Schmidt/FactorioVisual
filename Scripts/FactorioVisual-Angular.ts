@@ -85,6 +85,7 @@ module FactorioVisualAngular {
         result: string,
         result_count: number,
         subgroup: string,
+        subgroup_order:string,
         icon: string,
         order?: string,
         type: string;
@@ -163,7 +164,16 @@ module FactorioVisualAngular {
                     }[],
                     order: string,
                     name: string,
-                    result: string,
+                    result?: string,
+                    results?: {
+                        amount?: number,
+                        name?: string,
+                        type?: string,
+                        /**
+                         * 1 - name, 2 - amount
+                         */
+                        [index: number]: any
+                    }[],
                     result_count?: number,
                     subgroup?: string
                 }
@@ -192,7 +202,7 @@ module FactorioVisualAngular {
                         order: undefined
                     }
                 };
-
+                //TODO:recipe.result or recipe.results
                 nodes.push(node);
                 if (productToNode[recipe.result] == undefined)
                     productToNode[recipe.result] = [];
@@ -279,6 +289,17 @@ module FactorioVisualAngular {
                 //}
             }
 
+            //Find subgroup_order for Products
+            for (var key in productToNode) {
+                var products = productToNode[key];
+                for (var key in products) {
+                    var product = products[key];
+                    if (product.data['subgroup_order'] == undefined && product.data['subgroup'] != undefined) {
+                        product.data['subgroup_order'] = itemSubGroups[product.data['subgroup']].order;
+                    }
+                }
+            }
+
             cyOfRecipe = cytoscape({
                 elements: {
                     nodes: nodes,
@@ -346,6 +367,7 @@ module FactorioVisualAngular {
         debug: any;
         products: IProducts;
         itemGroups: IItemGroup[];
+        itemSubGroups: IItemSubGroup;
         selectedItemGroup: IItemGroup;
         onItemGroupSelect: (itemGroup: IItemGroup) => void;
         onProductSelect: (product: IProduct) => void;
@@ -372,6 +394,7 @@ module FactorioVisualAngular {
 
                 $scope.loaded = true;
                 $scope.itemGroups = factorioGraph.itemGroups;
+                $scope.itemSubGroups = factorioGraph.itemSubGroups;
             });
 
 
@@ -433,7 +456,7 @@ module FactorioVisualAngular {
                         avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
                         roots: undefined, // the roots of the trees
                         maximalAdjustments: 0, // how many times to try to position the nodes in a maximal way (i.e. no backtracking)
-                        animate: false, // whether to transition the node positions
+                        animate: true, // whether to transition the node positions
                         animationDuration: 500, // duration of animation in ms if enabled
                         ready: undefined, // callback on layoutready
                         stop: undefined // callback on layoutstop
@@ -446,15 +469,18 @@ module FactorioVisualAngular {
                             selector: 'edge',
                             css: {
                                 'width': 6,
-                                'curve-style': 'bezier'
+                                'curve-style': 'bezier',
+                                'mid-target-arrow-shape': 'triangle',
+                                'mid-target-arrow-fill': 'filled',
+                                'mid-target-arrow-color': '#000'
                                 //'line-color': '#000'
                             }
                         },
                         {
                             selector: 'node',
                             css: {
-                                'height': 100,
-                                'width': 100,
+                                'height': 50,
+                                'width': 50,
                                 'background-fit': 'cover',
                                 'border-color': '#000',
                                 'border-width': 3,
