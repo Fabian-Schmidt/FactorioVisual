@@ -419,20 +419,22 @@ var FactorioVisualAngular;
                         edges: []
                     },
                     layout: {
-                        name: 'breadthfirst',
+                        name: 'dagre',
+                        // dagre algo options, uses default value on undefined
+                        nodeSep: 110,
+                        edgeSep: undefined,
+                        rankSep: undefined,
+                        rankDir: undefined,
+                        minLen: function (edge) { return 1; },
+                        edgeWeight: function (edge) { return 1; },
+                        // general layout options
                         fit: true,
-                        directed: true,
-                        padding: 100,
-                        circle: false,
-                        spacingFactor: 1.5,
-                        boundingBox: undefined,
-                        avoidOverlap: true,
-                        roots: undefined,
-                        maximalAdjustments: 10,
+                        padding: 10,
                         animate: true,
-                        animationDuration: 500,
-                        ready: undefined,
-                        stop: undefined // callback on layoutstop
+                        animationDuration: 300,
+                        boundingBox: undefined,
+                        ready: function () { },
+                        stop: function () { } // on layoutstop
                     },
                     headless: false,
                     minZoom: 0.2,
@@ -445,7 +447,7 @@ var FactorioVisualAngular;
                                 'curve-style': 'bezier',
                                 'target-arrow-shape': 'triangle',
                                 'target-arrow-fill': 'filled',
-                                'target-arrow-color': '#000',
+                                'target-arrow-color': '#DDD',
                                 'content': 'data(amount)'
                             }
                         },

@@ -16,6 +16,7 @@
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap-theme.css" />
@@ -95,6 +96,10 @@
     <Content Include="Scripts\cytoscape.min.js">
       <DependentUpon>cytoscape.js</DependentUpon>
     </Content>
+    <Content Include="Scripts\dagre\dagre.core.js" />
+    <Content Include="Scripts\dagre\dagre.core.min.js" />
+    <Content Include="Scripts\dagre\dagre.js" />
+    <Content Include="Scripts\dagre\dagre.min.js" />
     <Content Include="Scripts\FactorioVisual-Angular.js">
       <DependentUpon>FactorioVisual-Angular.ts</DependentUpon>
     </Content>

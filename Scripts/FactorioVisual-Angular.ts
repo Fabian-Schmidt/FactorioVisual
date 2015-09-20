@@ -567,22 +567,24 @@ module FactorioVisualAngular {
                         edges: []
                     },
                     layout: {
-                        name: 'breadthfirst',
+                        name: 'dagre',
 
-                        fit: true, // whether to fit the viewport to the graph
-                        directed: true, // whether the tree is directed downwards (or edges can point in any direction if false)
-                        padding: 100, // padding on fit
-                
-                        circle: false, // put depths in concentric circles if true, put depths top down if false
-                        spacingFactor: 1.5, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
-                        boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-                        avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
-                        roots: undefined, // the roots of the trees
-                        maximalAdjustments: 10, // how many times to try to position the nodes in a maximal way (i.e. no backtracking)
+                        // dagre algo options, uses default value on undefined
+                        nodeSep: 110, // the separation between adjacent nodes in the same rank
+                        edgeSep: undefined, // the separation between adjacent edges in the same rank
+                        rankSep: undefined, // the separation between adjacent nodes in the same rank
+                        rankDir: undefined, // 'TB' for top to bottom flow, 'LR' for left to right
+                        minLen: function (edge) { return 1; }, // number of ranks to keep between the source and target of the edge
+                        edgeWeight: function (edge) { return 1; }, // higher weight edges are generally made shorter and straighter than lower weight edges
+
+                        // general layout options
+                        fit: true, // whether to fit to viewport
+                        padding: 10, // fit padding
                         animate: true, // whether to transition the node positions
-                        animationDuration: 500, // duration of animation in ms if enabled
-                        ready: undefined, // callback on layoutready
-                        stop: undefined // callback on layoutstop
+                        animationDuration: 300, // duration of animation in ms if enabled
+                        boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+                        ready: function () { }, // on layoutready
+                        stop: function () { } // on layoutstop
                     },
                     headless: false,
                     minZoom: 0.2,
@@ -595,7 +597,7 @@ module FactorioVisualAngular {
                                 'curve-style': 'bezier',
                                 'target-arrow-shape': 'triangle',
                                 'target-arrow-fill': 'filled',
-                                'target-arrow-color': '#000',
+                                'target-arrow-color': '#DDD',
                                 'content': 'data(amount)'
                                 //'line-color': '#000'
                             }
