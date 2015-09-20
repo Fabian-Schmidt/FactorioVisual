@@ -879,6 +879,7 @@ declare module Cy {
          * @param selector The selector to match against.
          */
         nodes(selector: Selector): CollectionNodes;
+        edges(): CollectionEdges;
         /**
          * Get the edges that match the specified selector.
          * 

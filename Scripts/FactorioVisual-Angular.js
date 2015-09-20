@@ -64,6 +64,7 @@ var FactorioVisualAngular;
             var edges = [];
             //Lookup of items to speed up later finding icons etc.
             var itemToNode = {};
+            var recipeToNode = {};
             var recipes;
             recipes = data.recipe;
             for (var key in recipes) {
@@ -72,7 +73,7 @@ var FactorioVisualAngular;
                 if (recipe.result) {
                     //recipe has one result
                     node = {
-                        classes: 'recipe recipeSingleItemResult recipeItem',
+                        classes: 'recipe item',
                         data: {
                             id: recipe.name,
                             name: recipe.name,
@@ -89,9 +90,49 @@ var FactorioVisualAngular;
                         }
                     };
                     nodes.push(node);
-                    if (itemToNode[recipe.result] == undefined)
-                        itemToNode[recipe.result] = [];
-                    itemToNode[recipe.result].push(node);
+                    recipeToNode[recipe.name] = node;
+                    if (itemToNode[recipe.result] == undefined) {
+                        itemToNode[recipe.result] = node;
+                    }
+                    else {
+                        //Their are more than one recipe to create this item.
+                        //Create a item node and link all this one.
+                        node.classes = 'recipe';
+                        node.data.id = node.data.name;
+                        edges.push({
+                            classes: 'recipe',
+                            data: {
+                                source: recipe.name,
+                                target: 'item_' + recipe.result,
+                                amount: node.data.result_count
+                            }
+                        });
+                        if (itemToNode[recipe.result].classes != 'item') {
+                            //Change old node
+                            node = itemToNode[recipe.result];
+                            node.classes = 'recipe';
+                            edges.push({
+                                classes: 'recipe',
+                                data: {
+                                    source: node.data.id,
+                                    target: 'item_' + recipe.result,
+                                    amount: node.data.result_count
+                                }
+                            });
+                            node = {
+                                classes: 'item norecipe',
+                                data: {
+                                    id: 'item_' + recipe.result,
+                                    name: recipe.result,
+                                    //icon: factorio.factorioFolder + 'data/base/graphics/terrain/blank.png',
+                                    order: undefined,
+                                    selected: false
+                                }
+                            };
+                            nodes.push(node);
+                            itemToNode[recipe.result] = node;
+                        }
+                    }
                 }
                 else if (recipe.results) {
                     //recipe has one or many results
@@ -116,15 +157,21 @@ var FactorioVisualAngular;
                             selected: false
                         }
                     };
-                    if (recipe.results.length > 1) {
-                        parentNode.classes += ' recipeMultiItemResult';
-                    }
-                    else {
-                        parentNode.classes += ' recipeSingleItemResult';
-                    }
+                    recipeToNode[parentNode.data.id] = parentNode;
+                    //if (recipe.results.length > 1) {
+                    //    parentNode.classes += ' recipeMultiItemResult';
+                    //} else {
+                    //    parentNode.classes += ' recipeSingleItemResult';
+                    //}
                     if (recipe.subgroup) {
-                        parentNode.classes += ' ' + itemSubGroups[recipe.subgroup].group;
-                        parentNode.data.subgroup_order = itemSubGroups[recipe.subgroup].order;
+                        if (itemSubGroups[recipe.subgroup] == undefined) {
+                            if (console && console.error)
+                                console.error("Item sub group '" + recipe.subgroup + "' not found.");
+                        }
+                        else {
+                            parentNode.classes += ' ' + itemSubGroups[recipe.subgroup].group;
+                            parentNode.data.subgroup_order = itemSubGroups[recipe.subgroup].order;
+                        }
                     }
                     nodes.push(parentNode);
                     //}
@@ -136,24 +183,28 @@ var FactorioVisualAngular;
                         if (result.amount == undefined) {
                             result.amount = result[2];
                         }
-                        node = {
-                            classes: 'recipeItem',
+                        if (itemToNode[result.name] == undefined) {
+                            node = {
+                                classes: 'item norecipe',
+                                data: {
+                                    id: 'item_' + result.name,
+                                    name: result.name,
+                                    //icon: factorio.factorioFolder + 'data/base/graphics/terrain/blank.png',
+                                    order: undefined,
+                                    selected: false
+                                }
+                            };
+                            nodes.push(node);
+                            itemToNode[result.name] = node;
+                        }
+                        edges.push({
+                            classes: 'recipe',
                             data: {
-                                id: recipe.name + '_' + result.name,
-                                parent: recipe.name,
-                                name: recipe.name + ' -> ' + result.name,
-                                result: result.name,
-                                result_count: result.amount,
-                                energy_required: recipe.energy_required,
-                                //icon: factorio.factorioFolder + 'data/base/graphics/terrain/blank.png',
-                                order: undefined,
-                                selected: false
+                                source: recipe.name,
+                                target: 'item_' + result.name,
+                                amount: result.amount
                             }
-                        };
-                        nodes.push(node);
-                        if (itemToNode[result.name] == undefined)
-                            itemToNode[result.name] = [];
-                        itemToNode[result.name].push(node);
+                        });
                     }
                 }
                 else {
@@ -171,79 +222,98 @@ var FactorioVisualAngular;
                     if (ingredient.amount == undefined) {
                         ingredient.amount = ingredient[2];
                     }
-                    var sourceProducts = itemToNode[ingredient.name];
-                    if (sourceProducts == undefined) {
+                    var ingredientId = ingredient.name;
+                    var sourceProduct = itemToNode[ingredientId];
+                    if (sourceProduct == undefined) {
                         //source Product not found. It is not a ingredient. Must be a raw resource.
                         //create it
-                        itemToNode[ingredient.name] = [{
-                                classes: 'recipe onlyIngredient',
-                                data: {
-                                    id: ingredient.name,
-                                    name: ingredient.name,
-                                    result: ingredient.name,
-                                    result_count: undefined,
-                                    category: undefined,
-                                    subgroup: undefined,
-                                    energy_required: undefined,
-                                    //icon: factorio.factorioFolder + 'data/base/graphics/terrain/blank.png',
-                                    order: undefined
-                                }
-                            }];
-                        nodes.push(itemToNode[ingredient.name][0]);
-                        sourceProducts = itemToNode[ingredient.name];
-                    }
-                    //create connection to source products. If more than one mark it.
-                    for (var key in sourceProducts) {
-                        var sourceProduct = sourceProducts[key];
-                        edges.push({
-                            classes: sourceProducts.length > 1 ? 'recipe ingredientChoice' : 'recipe',
+                        itemToNode[ingredientId] = {
+                            classes: 'item norecipe onlyIngredient',
                             data: {
-                                source: sourceProduct.data.id,
-                                target: recipe.name,
-                                amount: ingredient.amount
+                                id: ingredientId,
+                                name: ingredient.name,
+                                result: ingredient.name,
+                                result_count: undefined,
+                                category: undefined,
+                                subgroup: undefined,
+                                energy_required: undefined,
+                                //icon: factorio.factorioFolder + 'data/base/graphics/terrain/blank.png',
+                                order: undefined
                             }
-                        });
+                        };
+                        nodes.push(itemToNode[ingredientId]);
+                        sourceProduct = itemToNode[ingredientId];
                     }
+                    //create connection to source products.
+                    edges.push({
+                        classes: 'recipe',
+                        data: {
+                            source: sourceProduct.data.id,
+                            target: recipe.name,
+                            amount: ingredient.amount
+                        }
+                    });
                 }
             }
             //Find icon for Products
             for (var key in data) {
-                //if (key != 'recipe') {
                 var dataGroup = data[key];
                 for (var key in dataGroup) {
                     var dataElement = dataGroup[key];
                     if (dataElement.icon != undefined) {
-                        var products = itemToNode[dataElement.name];
-                        if (products != undefined) {
-                            for (var key in products) {
-                                var product = products[key];
-                                if (product.data['icon'] == undefined) {
-                                    product.data['icon'] = factorio.iconConfigToURI(dataElement.icon);
+                        var product = itemToNode[dataElement.name];
+                        if (product != undefined) {
+                            if (product.data['icon'] == undefined) {
+                                product.data['icon'] = factorio.iconConfigToURI(dataElement.icon);
+                            }
+                            if (dataElement.subgroup != undefined && product.classes.indexOf('recipe ') >= 0) {
+                                product.data['subgroup'] = dataElement.subgroup;
+                                if (itemSubGroups[dataElement.subgroup] == undefined) {
+                                    if (console && console.error)
+                                        console.error("Item sub group '" + dataElement.subgroup + "' not found.");
                                 }
-                                if (dataElement.subgroup != undefined && product.classes.indexOf('recipe ') >= 0) {
-                                    product.data['subgroup'] = dataElement.subgroup;
+                                else {
                                     product.classes += " " + itemSubGroups[dataElement.subgroup].group;
                                 }
-                                if (dataElement.order != undefined)
-                                    product.data['order'] = dataElement.order;
-                                if (dataElement.category != undefined)
-                                    product.data['category'] = dataElement.category;
-                                if (dataElement.type != undefined)
-                                    product.data['type'] = dataElement.type;
                             }
+                            if (dataElement.order != undefined)
+                                product.data['order'] = dataElement.order;
+                            if (dataElement.category != undefined)
+                                product.data['category'] = dataElement.category;
+                            if (dataElement.type != undefined)
+                                product.data['type'] = dataElement.type;
+                        }
+                        var product = recipeToNode[dataElement.name];
+                        if (product != undefined) {
+                            if (product.data['icon'] == undefined) {
+                                product.data['icon'] = factorio.iconConfigToURI(dataElement.icon);
+                            }
+                            if (dataElement.subgroup != undefined && product.classes.indexOf('recipe ') >= 0) {
+                                product.data['subgroup'] = dataElement.subgroup;
+                                if (itemSubGroups[dataElement.subgroup] == undefined) {
+                                    if (console && console.error)
+                                        console.error("Item sub group '" + dataElement.subgroup + "' not found.");
+                                }
+                                else {
+                                    product.classes += " " + itemSubGroups[dataElement.subgroup].group;
+                                }
+                            }
+                            if (dataElement.order != undefined)
+                                product.data['order'] = dataElement.order;
+                            if (dataElement.category != undefined)
+                                product.data['category'] = dataElement.category;
+                            if (dataElement.type != undefined)
+                                product.data['type'] = dataElement.type;
                         }
                     }
                 }
             }
             //Find subgroup_order for Products
             for (var key in itemToNode) {
-                var products = itemToNode[key];
-                for (var key in products) {
-                    var product = products[key];
-                    if (product.classes.indexOf('recipe ') >= 0) {
-                        if (product.data['subgroup_order'] == undefined && product.data['subgroup'] != undefined) {
-                            product.data['subgroup_order'] = itemSubGroups[product.data['subgroup']].order;
-                        }
+                var product = itemToNode[key];
+                if (product.classes.indexOf('recipe ') >= 0) {
+                    if (product.data['subgroup_order'] == undefined && product.data['subgroup'] != undefined) {
+                        product.data['subgroup_order'] = itemSubGroups[product.data['subgroup']].order;
                     }
                 }
             }
@@ -272,19 +342,6 @@ var FactorioVisualAngular;
             });
             return ret;
         };
-        //factorioGraph.productsRelated = function (productName: string): IProduct[] {
-        //    if (productName == undefined || productName.length < 3) {
-        //        throw 'Invalid product name.';
-        //    }
-        //    var ret: IProduct[] = [];
-        //    cyOfRecipe.nodes('#' + productName).incomers().nodes().forEach(function (ele) {
-        //        ret.push(ele.data());
-        //    });
-        //    cyOfRecipe.nodes('#' + productName).outgoers().nodes().forEach(function (ele) {
-        //        ret.push(ele.data());
-        //    });
-        //    return ret;
-        //}
         factorioGraph.recipesRelatedCollection = function (recipeName) {
             if (recipeName == undefined || recipeName.length < 3) {
                 throw 'Invalid product name.';
@@ -292,14 +349,9 @@ var FactorioVisualAngular;
             var ret = cyOfRecipe.collection();
             ret = ret.add(cyOfRecipe.nodes('#' + recipeName));
             ret = ret.add(cyOfRecipe.nodes('#' + recipeName).incomers());
+            ret = ret.add(cyOfRecipe.nodes('#' + recipeName).incomers().nodes().incomers().edges());
+            ret = ret.add(cyOfRecipe.nodes('#' + recipeName).incomers().nodes('.norecipe').incomers());
             ret = ret.add(cyOfRecipe.nodes('#' + recipeName).outgoers());
-            ret = ret.add(cyOfRecipe.nodes('#' + recipeName).incomers().nodes().parents());
-            ret = ret.add(cyOfRecipe.nodes('#' + recipeName).outgoers().nodes().children());
-            ret = ret.add(cyOfRecipe.nodes('#' + recipeName).children());
-            ret = ret.add(cyOfRecipe.nodes('#' + recipeName).children().incomers());
-            ret = ret.add(cyOfRecipe.nodes('#' + recipeName).children().outgoers());
-            ret = ret.add(cyOfRecipe.nodes('#' + recipeName).children().incomers().nodes().parents());
-            ret = ret.add(cyOfRecipe.nodes('#' + recipeName).children().outgoers().nodes().children());
             return ret;
         };
         factorioGraph.itemGroups = itemGroups;
@@ -340,7 +392,8 @@ var FactorioVisualAngular;
                 else {
                     product.selected = !product.selected;
                 }
-                $rootScope.$apply();
+                //$scope.$apply();
+                //$rootScope.$apply();
             });
         }
         selectController.$inject = [
@@ -371,11 +424,11 @@ var FactorioVisualAngular;
                         directed: true,
                         padding: 100,
                         circle: false,
-                        spacingFactor: 1.75,
+                        spacingFactor: 1.5,
                         boundingBox: undefined,
                         avoidOverlap: true,
                         roots: undefined,
-                        maximalAdjustments: 0,
+                        maximalAdjustments: 10,
                         animate: true,
                         animationDuration: 500,
                         ready: undefined,
@@ -417,7 +470,13 @@ var FactorioVisualAngular;
                         }, {
                             selector: 'node[displayCount > 0]',
                             css: {
+                                'border-color': '#B5844E',
                                 'background-color': '#B5844E'
+                            }
+                        }, {
+                            selector: '.norecipe',
+                            css: {
+                                'shape': 'roundrectangle'
                             }
                         }, {
                             selector: '$node > node',
@@ -447,7 +506,7 @@ var FactorioVisualAngular;
                 });
             });
             $rootScope.$on('factorio.selectProduct', function (event, product) {
-                var productName = product.name;
+                var productName = product.id;
                 var displayCount = that.cy.nodes('#' + productName).data('displayCount');
                 if (displayCount == undefined || isNaN(displayCount)) {
                     displayCount = 0;
@@ -476,14 +535,11 @@ var FactorioVisualAngular;
                         usageCount--;
                         ele.data('usageCount', usageCount);
                     };
+                    var productParents = factorioGraph.recipesRelatedCollection(product.id);
+                    productParents.forEach(removeOneUsageFunc);
                     that.cy.nodes('#' + productName).data('displayCount', --displayCount);
-                    that.cy.nodes('#' + productName).forEach(removeOneUsageFunc);
-                    that.cy.nodes('#' + productName).incomers().nodes().forEach(removeOneUsageFunc);
-                    that.cy.nodes('#' + productName).outgoers().nodes().forEach(removeOneUsageFunc);
-                    //TODO: this leave unused edges in the cy object.
-                    that.cy.remove(that.cy.nodes('#' + productName).incomers('[^displayCount], [displayCount = 0]').nodes('[usageCount = 0]'));
-                    that.cy.remove(that.cy.nodes('#' + productName).outgoers('[^displayCount], [displayCount = 0]').nodes('[usageCount = 0]'));
-                    that.cy.remove(that.cy.nodes('#' + productName + '[usageCount = 0]'));
+                    that.cy.remove(that.cy.nodes('[^displayCount][usageCount = 0], [displayCount = 0][usageCount = 0]'));
+                    that.cy.remove(that.cy.edges('[usageCount = 0]'));
                 }
                 //Trigger a layout update
                 that.cy.layout();
