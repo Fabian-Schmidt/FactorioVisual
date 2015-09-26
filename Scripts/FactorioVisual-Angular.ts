@@ -76,6 +76,8 @@ module FactorioVisualAngular {
         order: string,
         name: string,
         results_item_count: number,
+        result?: string,
+        result_count: number,
         //results: {
         //    amount: number,
         //    name: string,
@@ -132,6 +134,29 @@ module FactorioVisualAngular {
             order: string
         }
     };
+    export interface FactorioNodeDefinition extends Cy.NodeDefinition {
+        data: FactorioNodeDataDefinition;
+    }
+    export interface FactorioNodeDataDefinition extends Cy.NodeDataDefinition {
+        id?: string,
+        category?: string,
+        energy_required?: number,
+        order?: string,
+        name: string,
+        results_item_count?: number,
+        result?: string,
+        result_count?: number,
+        subgroup?: string,
+        subgroup_order?: string,
+        icon?: string,
+        selected: boolean;
+    }
+    export interface FactorioEdgeDefinition extends Cy.EdgeDefinition {
+        data: FactorioEdgeDataDefinition;
+    }
+    export interface FactorioEdgeDataDefinition extends Cy.EdgeDataDefinition {
+        amount?: number;
+    }
 
     export function factorioGraph($q: ng.IQService, factorioData: FactorioVisualAngular.IFactorioData): IFactorioGraph {
         var factorioGraph: any;
@@ -163,15 +188,15 @@ module FactorioVisualAngular {
                 };
             }
 
-            var nodes: Cy.NodeDefinition[] = [];
-            var edges: Cy.EdgeDefinition[] = [];
+            var nodes: FactorioNodeDefinition[] = [];
+            var edges: FactorioEdgeDefinition[] = [];
             
             //Lookup of items to speed up later finding icons etc.
             var itemToNode: {
-                [itemName: string]: Cy.NodeDefinition
+                [itemName: string]: FactorioNodeDefinition
             } = {};
             var recipeToNode: {
-                [itemName: string]: Cy.NodeDefinition
+                [itemName: string]: FactorioNodeDefinition
             } = {};
 
             var recipes: IInternalRecipes;
@@ -179,7 +204,7 @@ module FactorioVisualAngular {
 
             for (var key in recipes) {
                 var recipe = recipes[key];
-                var node: Cy.NodeDefinition;
+                var node: FactorioNodeDefinition;
 
                 if (recipe.result) {
                     //recipe has one result
@@ -236,7 +261,6 @@ module FactorioVisualAngular {
                                 data: {
                                     id: 'item_' + recipe.result,
                                     name: recipe.result,
-                                    
                                     //icon: factorio.factorioFolder + 'data/base/graphics/terrain/blank.png',
                                     order: undefined,
                                     selected: false
@@ -357,7 +381,8 @@ module FactorioVisualAngular {
                                 subgroup: undefined,
                                 energy_required: undefined,
                                 //icon: factorio.factorioFolder + 'data/base/graphics/terrain/blank.png',
-                                order: undefined
+                                order: undefined,
+                                selected: false
                             }
                         };
                         nodes.push(itemToNode[ingredientId]);
@@ -430,8 +455,8 @@ module FactorioVisualAngular {
             for (var key in itemToNode) {
                 var product = itemToNode[key];
                 if (product.classes.indexOf('recipe ') >= 0) {
-                    if (product.data['subgroup_order'] == undefined && product.data['subgroup'] != undefined) {
-                        product.data['subgroup_order'] = itemSubGroups[product.data['subgroup']].order;
+                    if (product.data.subgroup_order == undefined && product.data.subgroup != undefined && itemSubGroups[product.data.subgroup] != undefined) {
+                        product.data.subgroup_order = itemSubGroups[product.data.subgroup].order;
                     }
                 }
             }
@@ -607,7 +632,6 @@ module FactorioVisualAngular {
                             css: {
                                 'height': 50,
                                 'width': 50,
-                                'background-fit': 'cover',
                                 'border-color': '#000',
                                 'border-width': 3,
                                 'border-opacity': 0.5,
@@ -620,6 +644,7 @@ module FactorioVisualAngular {
                         {
                             selector: 'node[icon]',
                             css: {
+                                'background-fit': 'cover',
                                 'background-image': 'data(icon)'
                             }
                         }, {

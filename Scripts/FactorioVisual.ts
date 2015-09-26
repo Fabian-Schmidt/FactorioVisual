@@ -4,6 +4,19 @@
 /// <reference path="typings/toastr/toastr.d.ts" />
 /// <reference path="factoriovisual-angular.ts" />
 
+interface FactorioModNodeDefinition extends Cy.NodeDefinition {
+    data: FactorioModNodeDataDefinition;
+}
+interface FactorioModNodeDataDefinition extends Cy.NodeDataDefinition {
+    name: string,
+    index: number
+}
+interface FactorioModEdgeDefinition extends Cy.EdgeDefinition {
+    data: FactorioModEdgeDataDefinition;
+}
+interface FactorioModEdgeDataDefinition extends Cy.EdgeDataDefinition {
+    optinal: boolean
+}
 class FactorioVisual {
     constructor() {
         this.factorioFolder = '/factorio/';
@@ -155,8 +168,8 @@ class FactorioVisual {
             });
 
             jQuery.when.apply(jQuery, modListPromises).then(function () {
-                var nodes: Cy.NodeDefinition[] = [];
-                var edges: Cy.EdgeDefinition[] = [];
+                var nodes: FactorioModNodeDefinition[] = [];
+                var edges: FactorioModEdgeDefinition[] = [];
                 //nodes.push({
                 //    classes: 'mods',
                 //    data: {
@@ -184,7 +197,7 @@ class FactorioVisual {
                                 dependend_optinal = true;
                             }
                             edges.push({
-                                class: 'mod',
+                                //class: 'mod',
                                 data: { source: dependend_modname, target: mod['name'], optinal: dependend_optinal }
                             });
                         });
@@ -247,7 +260,6 @@ class FactorioVisual {
 
     jsonUpdated() {
         var that = factorio;
-        //window.setTimeout(factorio.createRecipeGraph, 10);
         that.dataLoadedPromise.resolveWith(that.data);
     }
 
@@ -277,176 +289,6 @@ class FactorioVisual {
 
         return icon;
 
-    }
-
-    cyOfRecipe: Cy.Instance;
-    createRecipeGraph() {
-        var that = factorio;
-
-        var nodes: Cy.NodeDefinition[] = [];
-        var edges: Cy.EdgeDefinition[] = [];
-
-        var recipes: {
-            [recipeName: string]: {
-                enabled: string,
-                category?: string,
-                energy_required?: number,
-                ingredients: {
-                    amount?: number,
-                    name?: string,
-                    type?: string,
-                    /**
-                     * 1 - name, 2 - amount
-                     */
-                    [index: number]: any
-                }[],
-                name: string,
-                result: string,
-                result_count?: number,
-                subgroup?: string
-            }
-        };
-        recipes = that.data.recipe;
-
-        var productToNode: {
-            [productName: string]: Cy.NodeDefinition[]
-        } = {};
-
-        for (var key in recipes) {
-            var recipe = recipes[key];
-
-            var node = {
-                classes: 'recipe',
-
-                data: {
-                    id: recipe.name,
-                    name: recipe.name,
-                    result: recipe.result,
-                    result_count: recipe.result_count == undefined ? 1 : recipe.result_count,
-                    category: recipe.category == undefined ? 'crafting' : recipe.category,
-                    subgroup: recipe.subgroup,
-                    energy_required: recipe.energy_required,
-                    icon: that.factorioFolder + 'data/base/graphics/terrain/blank.png'
-                }
-            };
-
-            nodes.push(node);
-            if (productToNode[recipe.result] == undefined)
-                productToNode[recipe.result] = [];
-            productToNode[recipe.result].push(node);
-        }
-
-        //Create edges from  ingredients
-        for (var key in recipes) {
-            var recipe = recipes[key];
-
-            for (var key in recipe.ingredients) {
-                var ingredient = recipe.ingredients[key];
-
-                if (ingredient.name == undefined) {
-                    ingredient.name = ingredient[1];
-                }
-                if (ingredient.amount == undefined) {
-                    ingredient.amount = ingredient[2];
-                }
-
-                var sourceProducts = productToNode[ingredient.name];
-                if (sourceProducts == undefined) {
-                    //source Product not found. It is not a ingredient. Must be a raw resource.
-                    //create it
-                    productToNode[ingredient.name] = [{
-                        classes: 'recipe onlyIngredient',
-                        data: {
-                            id: ingredient.name,
-                            name: ingredient.name,
-                            result: ingredient.name,
-                            result_count: undefined,
-                            category: undefined,
-                            subgroup: undefined,
-                            energy_required: undefined,
-                            icon: that.factorioFolder + 'data/base/graphics/terrain/blank.png'
-                        }
-                    }];
-                    nodes.push(productToNode[ingredient.name][0]);
-                    sourceProducts = productToNode[ingredient.name];
-                }
-
-                //create connection to source products. If more than one mark it.
-                for (var key in sourceProducts) {
-                    var sourceProduct = sourceProducts[key];
-                    edges.push({
-                        classes: sourceProducts.length > 1 ? 'recipe ingredientChoice' : 'recipe',
-                        data: {
-                            source: sourceProduct.data.id,
-                            target: recipe.name
-                        }
-                    })
-                }
-            }
-        }
-
-        //Find icon for Products
-        for (var key in that.data) {
-            //if (key != 'recipe') {
-            var dataGroup = that.data[key];
-            for (var key in dataGroup) {
-                var dataElement = dataGroup[key];
-                if (dataElement.icon != undefined) {
-                    var products = productToNode[dataElement.name];
-                    if (products != undefined) {
-                        for (var key in products) {
-                            var product = products[key];
-                            product.data['icon'] = that.iconConfigToURI(dataElement.icon);
-                        }
-                    }
-                }
-            }
-            //}
-        }
-
-        that.cyOfRecipe = cytoscape({
-            container: document.getElementById('cy-Recipe'),
-            elements: {
-                nodes: nodes,
-                edges: edges
-            }, layout: {
-                name: 'breadthfirst',
-
-                fit: true, // whether to fit the viewport to the graph
-                directed: false, // whether the tree is directed downwards (or edges can point in any direction if false)
-                padding: 100, // padding on fit
-                
-                circle: false, // put depths in concentric circles if true, put depths top down if false
-                spacingFactor: 1.75, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
-                boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-                avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
-                roots: undefined, // the roots of the trees
-                maximalAdjustments: 0, // how many times to try to position the nodes in a maximal way (i.e. no backtracking)
-                animate: false, // whether to transition the node positions
-                animationDuration: 500, // duration of animation in ms if enabled
-                ready: undefined, // callback on layoutready
-                stop: undefined // callback on layoutstop
-            },
-            minZoom: 0.2,
-            maxZoom: 2,
-            style: [
-                {
-                    selector: 'node',
-                    css: {
-                        'height': 100,
-                        'width': 100,
-                        'background-fit': 'cover',
-                        'border-color': '#000',
-                        'border-width': 3,
-                        'border-opacity': 0.5,
-                        'content': 'data(name)',
-                        //'shape': 'rectangle',
-                        //'text-valign': 'center',
-                        //'text-halign': 'center',
-                        'background-image': 'data(icon)'
-                    }
-                }]
-        });
     }
 }
 var factorio = new FactorioVisual();

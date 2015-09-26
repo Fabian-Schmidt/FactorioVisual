@@ -560,11 +560,11 @@ declare module Cy {
             renderedPosition?: Position,
             style?: Css.ElementCss
         }, options?: {
-                duration?: number,
-                queue?: boolean,
-                complete?: () => void,
-                step?: () => void
-            }): CollectionElements;
+            duration?: number,
+            queue?: boolean,
+            complete?: () => void,
+            step?: () => void
+        }): CollectionElements;
 
         /**
          * Add a delay between animations for the elements.
@@ -696,7 +696,7 @@ declare module Cy {
          * eles - The collection of elements being iterated.
          * @param thisArg [optional] The value for this within the iterating function.
          */
-        forEach(each: (ele: CollectionElements, i: number, eles: CollectionElements) => void|boolean, thisArg?: any);
+        forEach(each: (ele: CollectionElements, i: number, eles: CollectionElements) => void | boolean, thisArg?: any);
 
         /**
          * Get an element at a particular index in the collection.
@@ -1140,7 +1140,7 @@ declare module Cy {
         /**
          * The root nodes (selector or collection) to start the search from.
          */
-        roots: Selector|Collection;
+        roots: Selector | Collection;
         /**
          * A handler function that is called when a node is visited in the search. The handler returns true when it finds the desired node, and it returns false to cancel the search.
          * i - The index indicating this node is the ith visited node.
@@ -1172,7 +1172,7 @@ declare module Cy {
         /**
          * The root node (selector or collection) where the algorithm starts.
          */
-        root: Selector|Collection;
+        root: Selector | Collection;
 
         /**
          * A function that returns the positive numeric weight for this edge.
@@ -1224,7 +1224,7 @@ declare module Cy {
          * @param directed [optional] A boolean indicating whether the search should only go along edges from source to target (default false).
          */
         breadthFirstSearch(
-            roots: Selector|Collection,
+            roots: Selector | Collection,
             visit?: (i: number, depth: number, v: CollectionNodes, e: CollectionEdges, u: CollectionNodes) => boolean,
             directed?: boolean): SearchBreadthFirstResult;
         /**
@@ -1248,8 +1248,8 @@ declare module Cy {
          * @param directed [optional] A boolean indicating whether the search should only go along edges from source to target (default false).
          */
         bfs(
-            roots: Selector|Collection,
-            visit?: (i: number, depth: number, v: CollectionNodes, e: CollectionEdges, u: CollectionNodes) => boolean|void,
+            roots: Selector | Collection,
+            visit?: (i: number, depth: number, v: CollectionNodes, e: CollectionEdges, u: CollectionNodes) => boolean | void,
             directed?: boolean): SearchBreadthFirstResult;
 
         /**
@@ -1273,8 +1273,8 @@ declare module Cy {
          * @param directed [optional] A boolean indicating whether the search should only go along edges from source to target (default false).
          */
         depthFirstSearch(
-            roots: Selector|Collection,
-            visit?: (i: number, depth: number, v: CollectionNodes, e: CollectionEdges, u: CollectionNodes) => boolean|void,
+            roots: Selector | Collection,
+            visit?: (i: number, depth: number, v: CollectionNodes, e: CollectionEdges, u: CollectionNodes) => boolean | void,
             directed?: boolean): SearchBreadthFirstResult;
         /**
          * Perform a depth-first search within the elements in the collection.
@@ -1297,7 +1297,7 @@ declare module Cy {
          * @param directed [optional] A boolean indicating whether the search should only go along edges from source to target (default false).
          */
         dfs(
-            roots: Selector|Collection,
+            roots: Selector | Collection,
             visit?: (i: number, depth: number, v: CollectionNodes, e: CollectionEdges, u: CollectionNodes) => boolean,
             directed?: boolean): SearchBreadthFirstResult;
 
@@ -1318,7 +1318,7 @@ declare module Cy {
          * @param directed [optional] A boolean indicating whether the algorithm should only go along edges from source to target (default false).
          */
         dijkstra(
-            root: Selector|Collection,
+            root: Selector | Collection,
             weight?: (edge: CollectionEdges) => number,
             directed?: boolean): SearchDijkstraResult;
         
@@ -1875,7 +1875,7 @@ declare module Cy {
 
     interface ElementDefinition {
         group?: ElementGroup;
-        data: NodeDataDefinition|EdgeDataDefinition;
+        data: NodeDataDefinition | EdgeDataDefinition;
         /**
          * Scratchpad data (usually temp or nonserialisable data)
          */
@@ -1964,10 +1964,19 @@ declare module Cy {
             "background-color"?: Colour
             "background-blacken"?: number
             "background-opacity"?: number
+            "background-fit"?: string
+            "background-image"?: string
             "border-width"?: number
             "border-style"?: Style
             "border-color"?: Colour
             "border-opacity"?: number
+            "curve-style"?: string
+            "target-arrow-shape"?: string
+            "target-arrow-fill"?: string
+            "target-arrow-color"?: Colour
+            "content"?: string
+            "text-valign"?: string
+            "text-halign"?: string
         }
 
         export interface CompoundNodeCss extends NodeCss {
@@ -2639,11 +2648,11 @@ declare module Cy {
                 eles: Collection
             }
         }, options?: {
-                duration?: number,
-                queue?: boolean,
-                complete?: () => void,
-                step?: () => void
-            }): Cy.Instance;
+            duration?: number,
+            queue?: boolean,
+            complete?: () => void,
+            step?: () => void
+        }): Cy.Instance;
 
         /**
          * Add a delay between animations for the viewport.
@@ -2742,6 +2751,21 @@ declare module Cy {
          */
         name?: string;
         padding?: number;
+        fit?: boolean;
+        animate?: boolean;
+        animationDuration?: number;
+        boundingBox?: any;
+
+        ready?: () => void;
+        stop?: () => void;
+
+        nodeSep?: number;
+        edgeSep?: number;
+        rankSep?: number;
+        rankDir?: string;
+        minLen?: (edge: any) => number;
+        edgeWeight?: (edge: any) => number;
+
     }
 
     interface CytoscapeOptions {
@@ -2756,11 +2780,11 @@ declare module Cy {
         /**
          * The [[Stylesheet]] used to style the graph. For convenience, this option can alternatively be specified as a promise that resolves to the stylesheet.
          */
-        style?: Stylesheet[]|Promise<Stylesheet[]>;
+        style?: Stylesheet[] | Promise<Stylesheet[]>;
         /**
          * An array of [[Elements]] specified as plain objects. For convenience, this option can alternatively be specified as a promise that resolves to the elements JSON.
          */
-        elements?: ElementsDefinition|ElementDefinition[]|Promise<ElementsDefinition>|Promise<ElementDefinition[]>;
+        elements?: ElementsDefinition | ElementDefinition[] | Promise<ElementsDefinition> | Promise<ElementDefinition[]>;
         /**
          * A plain object that specifies layout options. Which layout is initially run is specified by the name field. Refer to a layout's documentation for the options it supports. If you want to specify your node positions yourself in your elements JSON, you can use the preset layout — by default it does not set any positions, leaving your nodes in their current positions (e.g. specified in options.elements at initialisation time)
          */

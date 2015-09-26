@@ -238,7 +238,8 @@ var FactorioVisualAngular;
                                 subgroup: undefined,
                                 energy_required: undefined,
                                 //icon: factorio.factorioFolder + 'data/base/graphics/terrain/blank.png',
-                                order: undefined
+                                order: undefined,
+                                selected: false
                             }
                         };
                         nodes.push(itemToNode[ingredientId]);
@@ -312,8 +313,8 @@ var FactorioVisualAngular;
             for (var key in itemToNode) {
                 var product = itemToNode[key];
                 if (product.classes.indexOf('recipe ') >= 0) {
-                    if (product.data['subgroup_order'] == undefined && product.data['subgroup'] != undefined) {
-                        product.data['subgroup_order'] = itemSubGroups[product.data['subgroup']].order;
+                    if (product.data.subgroup_order == undefined && product.data.subgroup != undefined && itemSubGroups[product.data.subgroup] != undefined) {
+                        product.data.subgroup_order = itemSubGroups[product.data.subgroup].order;
                     }
                 }
             }
@@ -456,7 +457,6 @@ var FactorioVisualAngular;
                             css: {
                                 'height': 50,
                                 'width': 50,
-                                'background-fit': 'cover',
                                 'border-color': '#000',
                                 'border-width': 3,
                                 'border-opacity': 0.5,
@@ -467,6 +467,7 @@ var FactorioVisualAngular;
                         {
                             selector: 'node[icon]',
                             css: {
+                                'background-fit': 'cover',
                                 'background-image': 'data(icon)'
                             }
                         }, {
@@ -556,4 +557,4 @@ var FactorioVisualAngular;
     })();
     FactorioVisualAngular.graphController = graphController;
 })(FactorioVisualAngular || (FactorioVisualAngular = {}));
-//# sourceMappingURL=factoriovisual-angular.js.map
+//# sourceMappingURL=FactorioVisual-Angular.js.map

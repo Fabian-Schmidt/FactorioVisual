@@ -161,7 +161,7 @@ var FactorioVisual = (function () {
                                 dependend_optinal = true;
                             }
                             edges.push({
-                                class: 'mod',
+                                //class: 'mod',
                                 data: { source: dependend_modname, target: mod['name'], optinal: dependend_optinal }
                             });
                         });
@@ -217,7 +217,6 @@ var FactorioVisual = (function () {
     };
     FactorioVisual.prototype.jsonUpdated = function () {
         var that = factorio;
-        //window.setTimeout(factorio.createRecipeGraph, 10);
         that.dataLoadedPromise.resolveWith(that.data);
     };
     FactorioVisual.prototype.iconConfigToURI = function (icon) {
@@ -244,136 +243,6 @@ var FactorioVisual = (function () {
             }
         }
         return icon;
-    };
-    FactorioVisual.prototype.createRecipeGraph = function () {
-        var that = factorio;
-        var nodes = [];
-        var edges = [];
-        var recipes;
-        recipes = that.data.recipe;
-        var productToNode = {};
-        for (var key in recipes) {
-            var recipe = recipes[key];
-            var node = {
-                classes: 'recipe',
-                data: {
-                    id: recipe.name,
-                    name: recipe.name,
-                    result: recipe.result,
-                    result_count: recipe.result_count == undefined ? 1 : recipe.result_count,
-                    category: recipe.category == undefined ? 'crafting' : recipe.category,
-                    subgroup: recipe.subgroup,
-                    energy_required: recipe.energy_required,
-                    icon: that.factorioFolder + 'data/base/graphics/terrain/blank.png'
-                }
-            };
-            nodes.push(node);
-            if (productToNode[recipe.result] == undefined)
-                productToNode[recipe.result] = [];
-            productToNode[recipe.result].push(node);
-        }
-        //Create edges from  ingredients
-        for (var key in recipes) {
-            var recipe = recipes[key];
-            for (var key in recipe.ingredients) {
-                var ingredient = recipe.ingredients[key];
-                if (ingredient.name == undefined) {
-                    ingredient.name = ingredient[1];
-                }
-                if (ingredient.amount == undefined) {
-                    ingredient.amount = ingredient[2];
-                }
-                var sourceProducts = productToNode[ingredient.name];
-                if (sourceProducts == undefined) {
-                    //source Product not found. It is not a ingredient. Must be a raw resource.
-                    //create it
-                    productToNode[ingredient.name] = [{
-                            classes: 'recipe onlyIngredient',
-                            data: {
-                                id: ingredient.name,
-                                name: ingredient.name,
-                                result: ingredient.name,
-                                result_count: undefined,
-                                category: undefined,
-                                subgroup: undefined,
-                                energy_required: undefined,
-                                icon: that.factorioFolder + 'data/base/graphics/terrain/blank.png'
-                            }
-                        }];
-                    nodes.push(productToNode[ingredient.name][0]);
-                    sourceProducts = productToNode[ingredient.name];
-                }
-                //create connection to source products. If more than one mark it.
-                for (var key in sourceProducts) {
-                    var sourceProduct = sourceProducts[key];
-                    edges.push({
-                        classes: sourceProducts.length > 1 ? 'recipe ingredientChoice' : 'recipe',
-                        data: {
-                            source: sourceProduct.data.id,
-                            target: recipe.name
-                        }
-                    });
-                }
-            }
-        }
-        //Find icon for Products
-        for (var key in that.data) {
-            //if (key != 'recipe') {
-            var dataGroup = that.data[key];
-            for (var key in dataGroup) {
-                var dataElement = dataGroup[key];
-                if (dataElement.icon != undefined) {
-                    var products = productToNode[dataElement.name];
-                    if (products != undefined) {
-                        for (var key in products) {
-                            var product = products[key];
-                            product.data['icon'] = that.iconConfigToURI(dataElement.icon);
-                        }
-                    }
-                }
-            }
-        }
-        that.cyOfRecipe = cytoscape({
-            container: document.getElementById('cy-Recipe'),
-            elements: {
-                nodes: nodes,
-                edges: edges
-            }, layout: {
-                name: 'breadthfirst',
-                fit: true,
-                directed: false,
-                padding: 100,
-                circle: false,
-                spacingFactor: 1.75,
-                boundingBox: undefined,
-                avoidOverlap: true,
-                roots: undefined,
-                maximalAdjustments: 0,
-                animate: false,
-                animationDuration: 500,
-                ready: undefined,
-                stop: undefined // callback on layoutstop
-            },
-            minZoom: 0.2,
-            maxZoom: 2,
-            style: [
-                {
-                    selector: 'node',
-                    css: {
-                        'height': 100,
-                        'width': 100,
-                        'background-fit': 'cover',
-                        'border-color': '#000',
-                        'border-width': 3,
-                        'border-opacity': 0.5,
-                        'content': 'data(name)',
-                        //'shape': 'rectangle',
-                        //'text-valign': 'center',
-                        //'text-halign': 'center',
-                        'background-image': 'data(icon)'
-                    }
-                }]
-        });
     };
     return FactorioVisual;
 })();
