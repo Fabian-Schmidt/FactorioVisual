@@ -36,6 +36,7 @@
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="index.html" />
     <Content Include="mongoose-free-5.6.exe" />
+    <Content Include="Views\recipe.html" />
     <Content Include="Scripts\angular-animate.js" />
     <Content Include="Scripts\angular-animate.min.js">
       <DependentUpon>angular-animate.js</DependentUpon>
@@ -915,6 +916,10 @@
     <Content Include="Scripts\lua.js" />
     <Content Include="Scripts\lua.vm.js" />
     <Content Include="Scripts\npm.js" />
+    <Content Include="Scripts\qTip\jquery.qtip.css" />
+    <Content Include="Scripts\qTip\jquery.qtip.js" />
+    <Content Include="Scripts\qTip\jquery.qtip.min.css" />
+    <Content Include="Scripts\qTip\jquery.qtip.min.js" />
     <Content Include="Scripts\toastr.js" />
     <Content Include="Scripts\toastr.min.js">
       <DependentUpon>toastr.js</DependentUpon>
@@ -975,6 +980,7 @@
     <Content Include="start.bat" />
     <Content Include="tsconfig.json" />
     <Content Include="Scripts\version.json" />
+    <Content Include="Scripts\qTip\jquery.qtip.min.js.map" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Scripts\dkjson.lua" />

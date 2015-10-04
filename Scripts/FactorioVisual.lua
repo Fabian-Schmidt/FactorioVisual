@@ -39,7 +39,8 @@ local function load_lua_over_http(url)
 	if not ok then
 		return nil, tostring(err)
 	elseif xhr.status ~= 200 then
-		return nil, "HTTP GET " .. xhr.statusText .. ": " .. url
+	    print("HTTP GET " .. xhr.statusText .. ": " .. url)
+		return load('', url)
 	end
 	return load(xhr.responseText, url)
 end
@@ -108,20 +109,28 @@ local modListLoaded = function(object, modListTxt)
   local json = require ("dkjson")
   local modList = json.decode(modListTxt)
   
-  for modkey,modvalue in pairs(modList.mods) do
-    if modvalue.enabled == 'true' then
-      print (modvalue.name)
-	  if modvalue.Folder ~= nil then
-		currentLoadingMod = modvalue.Folder:gsub('%.', '\\.')
-		pcall (function()
-			local thisModData = require ("data")
-		end)
-	  elseif modvalue.name == 'base' then
-		currentLoadingMod = modvalue.name
-		require ("data")
+  local loadModFunction = function(modlist, filename)
+	  print ('Loading ' .. filename .. '.lua')
+	  for modkey,modvalue in pairs(modList.mods) do
+		if modvalue.enabled == 'true' then
+		  print (modvalue.name)
+		  if modvalue.Folder ~= nil then
+			currentLoadingMod = modvalue.Folder:gsub('%.', '\\.')
+			pcall (function()
+				local thisModData = require (filename)
+			end)
+		  elseif modvalue.name == 'base' then
+			currentLoadingMod = modvalue.name
+			require (filename)
+		  end
+		end
 	  end
-    end
+	  print ('Loaded ' .. filename .. '.lua')
   end
+
+  loadModFunction(modList, 'data')
+  loadModFunction(modList, 'data-updates')
+  loadModFunction(modList, 'data-final-fixes')
   
   --transfer data to JavaScript
   transferToJs = function(jsObjectName, luaObject, buffer, buflen) 

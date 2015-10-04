@@ -1,0 +1,29 @@
+﻿<div>
+    <p>{{product.result_count}} x {{product.name}}</p>
+    <table>
+        <tbody>
+            <tr>
+                <td>time</td>
+                <td>{{product.energy_required}}</td>
+            </tr>
+            <tr ng-repeat="ingredient in readRecipeIngredient(product)">
+                <td>
+                    <!--<img src="{{ingredient.icon}}" alt="{{ingredient.name}}" title="{{ingredient.name}}" />-->
+                </td>
+                <td>
+                    {{ingredient.amount}} x {{ingredient.source}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <!--<p>mod source</p>
+    <p>item description</p>
+    <p>
+        item values
+    </p>
+    <p>
+        Total raw: of recipe
+    </p>-->
+    <p>    MAde in: {{product.category}}</p>
+
+</div>

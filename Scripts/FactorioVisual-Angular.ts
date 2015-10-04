@@ -10,6 +10,36 @@ jQuery(function () {
     app.factory('factorioGraph', FactorioVisualAngular.factorioGraph);
     app.controller('selectController', FactorioVisualAngular.selectController);
     app.controller('graphController', FactorioVisualAngular.graphController);
+    app.directive('factorioRecipeTooltip', function ($http, $compile, $templateCache) {
+        return {
+            restrict: 'A',
+            link: function (scope, element, attrs) {
+                $http.get('Views/recipe.html', { cache: $templateCache }).
+                    success(function (content) {
+                        var compiledContent = $compile(content)(scope);
+
+                        (<any>$(element)).qtip({
+                            //id: 'myTooltip',
+                            content: compiledContent,
+                            position: {
+                                my: 'left top',
+                                at: 'bottom right',
+                                target: $(element)
+                            },
+                            show: { solo: true },
+                            hide: {
+                                event: 'mouseout unfocus',
+                                fixed: true,
+                                delay: 1000
+                            },
+                            style: { classes: 'qtip-light' }
+                        });
+
+                    });
+
+            }
+        }
+    });
 });
 
 
@@ -38,6 +68,8 @@ module FactorioVisualAngular {
         recipes(itemGroup?: string): IRecipes;
         //recipesRelated(recipeName: string): IRecipe[];
         recipesRelatedCollection(recipeName: string): Cy.Collection;
+        recipeIngredients(recipeId: string): IItem[];
+        //factories: IFactory[];
     };
     export interface IIngredient {
         amount?: number,
@@ -134,6 +166,10 @@ module FactorioVisualAngular {
             order: string
         }
     };
+    export interface IItem {
+        name: string
+        icon: string
+    }
     export interface FactorioNodeDefinition extends Cy.NodeDefinition {
         data: FactorioNodeDataDefinition;
     }
@@ -219,7 +255,7 @@ module FactorioVisualAngular {
                             category: recipe.category == undefined ? 'crafting' : recipe.category,
                             subgroup: recipe.subgroup,
                             subgroup_order: undefined,
-                            energy_required: recipe.energy_required,
+                            energy_required: recipe.energy_required == undefined ? 0.5 : recipe.energy_required,
                             //icon: factorio.factorioFolder + 'data/base/graphics/terrain/blank.png',
                             order: undefined,
                             selected: false
@@ -288,7 +324,7 @@ module FactorioVisualAngular {
                             category: recipe.category == undefined ? 'crafting' : recipe.category,
                             subgroup: recipe.subgroup,
                             subgroup_order: undefined,
-                            energy_required: recipe.energy_required,
+                            energy_required: recipe.energy_required == undefined ? 0.5 : recipe.energy_required,
                             icon: icon,
                             order: undefined,
                             selected: false
@@ -501,6 +537,22 @@ module FactorioVisualAngular {
 
             return ret;
         }
+        factorioGraph.recipeIngredients = function (recipeId: string): IItem[] {
+            if (recipeId == undefined || recipeId.length < 3) {
+                throw 'Invalid recipe id.';
+            }
+
+            var ret: Cy.Collection = cyOfRecipe.collection();
+            ret = ret.add(cyOfRecipe.nodes('#' + recipeId).incomers().edges());
+
+            var retArray = [];
+
+            ret.forEach((ele) => {
+                retArray.push(ele.data());
+            });
+
+            return retArray;
+        }
         factorioGraph.itemGroups = itemGroups;
         return factorioGraph;
     }
@@ -514,6 +566,9 @@ module FactorioVisualAngular {
         selectedItemGroup: IItemGroup;
         onItemGroupSelect: (itemGroup: IItemGroup) => void;
         onProductSelect: (product: IRecipe) => void;
+
+        readRecipeIngredient: (recipe: IRecipe) => IItem[];
+        readRecipeCategory: (recipe: IRecipe) => any;
     }
 
     export class selectController {
@@ -563,6 +618,13 @@ module FactorioVisualAngular {
                 //$scope.$apply();
                 //$rootScope.$apply();
             });
+            $scope.readRecipeIngredient = function (recipe: IRecipe): IItem[] {
+                return factorioGraph.recipeIngredients(recipe.id)
+            };
+            $scope.readRecipeCategory = function (recipe: IRecipe): any {
+                //return factorioGraph.
+            };
+
         }
     }
 
@@ -681,6 +743,29 @@ module FactorioVisualAngular {
                                 $rootScope.$emit('factorio.selectProduct', product);
                             }
                         });
+                        //that.cy.on('mousemove', 'node', function (event) {
+                        //    var target = event.cyTarget;
+                        //    var sourceName = target.data("source");
+                        //    var targetName = target.data("target");
+
+                        //    var x = (<any>event).cyPosition.x;
+                        //    var y = (<any>event).cyPosition.y;
+
+                        //    var node = event.cyTarget;
+                        //    (<any>$(node)).qtip({
+                        //        content: 'hello',
+                        //        show: {
+                        //            event: (<any>event).type,
+                        //            ready: true,
+                        //            solo: true
+                        //        },
+                        //        hide: {
+                        //            event: 'mouseout unfocus',
+                        //            fixed: true,
+                        //            delay: 1000
+                        //        }
+                        //    }, event);
+                        //});
                     }
                 });
             });
@@ -691,6 +776,7 @@ module FactorioVisualAngular {
                 if (displayCount == undefined || isNaN(displayCount)) {
                     displayCount = 0;
                 }
+                that.cy.startBatch();
                 if (displayCount == 0) {
                     //Add this to graph
                     var productParents = factorioGraph.recipesRelatedCollection(product.id);
@@ -718,6 +804,7 @@ module FactorioVisualAngular {
                     that.cy.remove(that.cy.nodes('[^displayCount][usageCount = 0], [displayCount = 0][usageCount = 0]'));
                     that.cy.remove(that.cy.edges('[usageCount = 0]'));
                 }
+                that.cy.endBatch();
                 //Trigger a layout update
                 (<any>that.cy).layout();
             });
